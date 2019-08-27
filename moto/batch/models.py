@@ -1020,21 +1020,35 @@ class BatchBackend(BaseBackend):
 
         return result
 
-    def list_jobs(self, job_queue, job_status=None, max_results=None, next_token=None):
+    def list_jobs(self, job_queue_name, job_status=None, max_results=None, next_token=None, array_job_id: str = None):
         jobs = []
 
-        job_queue = self.get_job_queue(job_queue)
-        if job_queue is None:
-            raise ClientException('Job queue {0} does not exist'.format(job_queue))
+        if job_queue_name is None and array_job_id is None:
+            raise ClientException('Job queue name is required')
+
+        job_queue = self.get_job_queue(job_queue_name)
+        if job_queue_name is not None and job_queue is None:
+            raise ClientException('Job queue {0} does not exist'.format(job_queue_name))
 
         if job_status is not None and job_status not in ('SUBMITTED', 'PENDING', 'RUNNABLE', 'STARTING', 'RUNNING', 'SUCCEEDED', 'FAILED'):
             raise ClientException('Job status is not one of SUBMITTED | PENDING | RUNNABLE | STARTING | RUNNING | SUCCEEDED | FAILED')
 
-        for job in job_queue.jobs:
-            if job_status is not None and job.job_state != job_status:
-                continue
+        if job_queue:
+            for job in job_queue.jobs:
+                if job_status is not None and job.job_state != job_status:
+                    continue
 
-            jobs.append(job)
+                jobs.append(job)
+
+        if array_job_id is not None:
+            for job_id, job in self._jobs.items():
+                if job_status is not None and job.job_state != job_status:
+                    continue
+                if job_id == array_job_id:
+                    continue
+                if not array_job_id.startswith(array_job_id):
+                    continue
+                jobs.append(job)
 
         return jobs
 
