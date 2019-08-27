@@ -270,9 +270,10 @@ class BatchResponse(BaseResponse):
         job_status = self._get_param('jobStatus')
         max_results = self._get_param('maxResults')
         next_token = self._get_param('nextToken')
+        array_job_id = self._get_param('arrayJobId')
 
         try:
-            jobs = self.batch_backend.list_jobs(job_queue, job_status, max_results, next_token)
+            jobs = self.batch_backend.list_jobs(job_queue, job_status, max_results, next_token, array_job_id)
         except AWSError as err:
             return err.response()
 
